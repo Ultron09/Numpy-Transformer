@@ -477,5 +477,3 @@ After mastering this implementation:
 
 *Remember: The best way to understand transformers is to implement them yourself.*
 =======
-"# Java" 
->>>>>>> 4ac600284af5a371114e29d2a5a0c8f0135a0bad
