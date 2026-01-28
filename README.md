@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # GPT from Scratch using NumPy
 
 A complete educational implementation of GPT (Generative Pre-trained Transformer) using **only NumPy**. This project breaks down every component of the transformer architecture with detailed mathematical explanations and clean, readable code.
@@ -475,3 +476,6 @@ After mastering this implementation:
 **Happy Learning! 🚀**
 
 *Remember: The best way to understand transformers is to implement them yourself.*
+=======
+"# Java" 
+>>>>>>> 4ac600284af5a371114e29d2a5a0c8f0135a0bad
