@@ -1,0 +1,5 @@
+# Core requirement
+numpy>=1.19.0
+
+# Optional: for visualization
+matplotlib>=3.3.0
