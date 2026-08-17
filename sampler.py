@@ -186,7 +186,7 @@ def generate_stream(
         input_arr = np.array([input_tokens], dtype=np.int32)
         
         # Forward pass to get logits: shape (batch_size, seq_len, vocab_size)
-        logits = model.forward(input_arr, training=False)
+        logits = model.forward(input_arr)
         last_logits = logits[0, -1, :]
         
         next_token = sampler.sample_token(last_logits, generated_ids=generated)
