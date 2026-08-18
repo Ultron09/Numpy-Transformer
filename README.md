@@ -133,27 +133,24 @@ Typically expands to 4x the model dimension, then projects back.
 ## 📁 Project Structure
 
 ```
-gpt-numpy/
-├── gpt_numpy.py          # Core GPT implementation
-│   ├── Embedding         # Token and positional embeddings
-│   ├── LayerNorm         # Layer normalization
-│   ├── GELU              # Activation function
-│   ├── Linear            # Fully connected layer
-│   ├── MultiHeadAttention# Attention mechanism
-│   ├── FeedForward       # Position-wise FFN
-│   ├── TransformerBlock  # Complete transformer layer
-│   └── GPT               # Full model
-│
-├── train.py              # Training infrastructure
-│   ├── AdamOptimizer     # Adam optimization algorithm
-│   ├── TextDataset       # Character-level data loader
-│   ├── cross_entropy_loss# Loss computation
-│   └── train()           # Training loop
-│
-├── example.py            # Quick demonstration
+Numpy-Transformer/
+├── gpt_numpy.py              # Core GPT transformer implementation
+├── tokenizer.py              # CharTokenizer and BPE (Byte-Pair Encoding) subword tokenizer
+├── sampler.py                # Sampling strategies (Top-K, Top-P, Min-P, Repetition penalty)
+├── kv_cache.py               # KV Cache & vectorized attention engine for fast inference
+├── positional_embeddings.py  # RoPE (Rotary), ALiBi, and Sinusoidal positional embeddings
+├── layers.py                 # Modern architectures: RMSNorm, SiLU, and SwiGLU FFN
+├── optimizers.py             # AdamW, SGD+Momentum, and Cosine Annealing scheduler
+├── weights_converter.py      # State dict export, import, and .npz compression
+├── benchmark.py              # FLOPs profiling, memory analysis & latency breakdown
+├── cli.py                    # Interactive console REPL with streaming generation
+├── example.py                # Quick end-to-end training and generation demo
+├── train.py                  # Full-scale training pipeline
+├── tests/
+│   └── test_gradcheck.py     # Finite-difference numerical gradient checking suite
 ├── data/
-│   └── shakespeare.txt   # Sample training data
-└── README.md             # This file
+│   └── shakespeare.txt       # Sample training corpus
+└── README.md                 # Complete documentation
 ```
 
 ## 🚀 Quick Start
@@ -161,11 +158,32 @@ gpt-numpy/
 ### Installation
 
 ```bash
-# Only numpy is required!
-pip install numpy
+# Only NumPy is required!
+pip install -r requirements.txt
+```
 
-# Optional: for visualization
-pip install matplotlib
+### Interactive Console
+
+Experience real-time streaming autoregressive text generation:
+
+```bash
+python cli.py --checkpoint checkpoints/example_model.pkl
+```
+
+### Run Automated Gradient Checking Tests
+
+Verify backpropagation mathematical derivations via finite differences:
+
+```bash
+python tests/test_gradcheck.py
+```
+
+### Run Performance & FLOPs Benchmark
+
+Profile layer latencies and tokens/sec throughput:
+
+```bash
+python benchmark.py --d_model 128 --num_layers 4 --seq_len 64 --batch_size 4
 ```
 
 ### Quick Example
