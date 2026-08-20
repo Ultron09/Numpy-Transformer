@@ -169,3 +169,274 @@ class SwiGLU:
         # 6. Gradient w.r.t input x
         grad_x = (grad_gate_linear @ self.W_gate.T) + (grad_up_linear @ self.W_up.T)
         return grad_x
+
+
+def repeat_kv(x: np.ndarray, n_rep: int) -> np.ndarray:
+    """
+    Repeat key/value heads along the head dimension for Grouped-Query Attention.
+    
+    Args:
+        x: Array of shape (batch, num_kv_heads, seq_len, head_dim)
+        n_rep: Number of times to repeat each KV head (num_heads // num_kv_heads)
+        
+    Returns:
+        Array of shape (batch, num_heads, seq_len, head_dim)
+    """
+    if n_rep == 1:
+        return x
+    return np.repeat(x, n_rep, axis=1)
+
+
+def unrepeat_kv_grad(grad: np.ndarray, n_rep: int) -> np.ndarray:
+    """
+    Sum gradients across repeated heads for backward pass of repeat_kv.
+    
+    Args:
+        grad: Gradient array of shape (batch, num_heads, seq_len, head_dim)
+        n_rep: Number of times heads were repeated
+        
+    Returns:
+        Gradient array of shape (batch, num_kv_heads, seq_len, head_dim)
+    """
+    if n_rep == 1:
+        return grad
+    batch, num_heads, seq_len, head_dim = grad.shape
+    num_kv_heads = num_heads // n_rep
+    reshaped = grad.reshape(batch, num_kv_heads, n_rep, seq_len, head_dim)
+    return np.sum(reshaped, axis=2)
+
+
+class GroupedQueryAttention:
+    """
+    Grouped-Query Attention (GQA) and Multi-Query Attention (MQA).
+    
+    Mathematical Formulation:
+        For num_heads (H) queries and num_kv_heads (H_kv) keys/values:
+        - When H_kv == H: Standard Multi-Head Attention (MHA)
+        - When H_kv == 1: Multi-Query Attention (MQA - Shazeer, 2019)
+        - When 1 < H_kv < H: Grouped-Query Attention (GQA - Ainslie et al., 2023)
+        
+    GQA partitions H query heads into H_kv groups of size (H / H_kv).
+    Keys and values are shared within each group, drastically reducing KV cache size
+    and memory bandwidth during autoregressive decoding while preserving full MHA quality.
+    """
+    
+    def __init__(
+        self,
+        d_model: int,
+        num_heads: int,
+        num_kv_heads: Optional[int] = None,
+        head_dim: Optional[int] = None,
+        dropout: float = 0.0
+    ):
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.num_kv_heads = num_kv_heads if num_kv_heads is not None else num_heads
+        assert num_heads % self.num_kv_heads == 0, "num_heads must be divisible by num_kv_heads"
+        self.num_queries_per_kv = num_heads // self.num_kv_heads
+        
+        self.head_dim = head_dim if head_dim is not None else (d_model // num_heads)
+        self.q_dim = self.num_heads * self.head_dim
+        self.kv_dim = self.num_kv_heads * self.head_dim
+        self.dropout = dropout
+        
+        # Xavier/He initialization
+        q_std = np.sqrt(2.0 / (d_model + self.q_dim))
+        kv_std = np.sqrt(2.0 / (d_model + self.kv_dim))
+        out_std = np.sqrt(2.0 / (self.q_dim + d_model))
+        
+        self.W_q = np.random.randn(d_model, self.q_dim).astype(np.float32) * q_std
+        self.W_k = np.random.randn(d_model, self.kv_dim).astype(np.float32) * kv_std
+        self.W_v = np.random.randn(d_model, self.kv_dim).astype(np.float32) * kv_std
+        self.W_o = np.random.randn(self.q_dim, d_model).astype(np.float32) * out_std
+        
+        self.grad_W_q = None
+        self.grad_W_k = None
+        self.grad_W_v = None
+        self.grad_W_o = None
+        
+    def forward(
+        self,
+        x: np.ndarray,
+        mask: Optional[np.ndarray] = None,
+        rope_emb: Optional[object] = None,
+        rope_offset: int = 0
+    ) -> np.ndarray:
+        """
+        Forward pass for Grouped-Query Attention.
+        
+        Args:
+            x: Input array of shape (batch, seq_len, d_model)
+            mask: Optional attention mask (additive, -inf for masked entries)
+            rope_emb: Optional RotaryEmbedding instance to apply
+            rope_offset: Sequence offset index for RoPE
+            
+        Returns:
+            Output array of shape (batch, seq_len, d_model)
+        """
+        self.x = x
+        batch_size, seq_len, _ = x.shape
+        self.batch_size = batch_size
+        self.seq_len = seq_len
+        self.rope_emb = rope_emb
+        self.rope_offset = rope_offset
+        
+        # 1. Linear projections
+        q_proj = x @ self.W_q  # (B, L, H * D_h)
+        k_proj = x @ self.W_k  # (B, L, H_kv * D_h)
+        v_proj = x @ self.W_v  # (B, L, H_kv * D_h)
+        
+        # 2. Reshape to multi-head tensors
+        q = q_proj.reshape(batch_size, seq_len, self.num_heads, self.head_dim).transpose(0, 2, 1, 3)
+        k = k_proj.reshape(batch_size, seq_len, self.num_kv_heads, self.head_dim).transpose(0, 2, 1, 3)
+        v = v_proj.reshape(batch_size, seq_len, self.num_kv_heads, self.head_dim).transpose(0, 2, 1, 3)
+        
+        # 3. Apply RoPE if provided
+        if rope_emb is not None:
+            q = rope_emb.apply_rope(q, offset=rope_offset)
+            k = rope_emb.apply_rope(k, offset=rope_offset)
+            
+        self.q = q
+        self.k = k
+        self.v = v
+        
+        # 4. Repeat KV heads to match query heads
+        k_rep = repeat_kv(k, self.num_queries_per_kv)  # (B, H, L, D_h)
+        v_rep = repeat_kv(v, self.num_queries_per_kv)  # (B, H, L, D_h)
+        self.k_rep = k_rep
+        self.v_rep = v_rep
+        
+        # 5. Scaled dot-product attention
+        scale = 1.0 / np.sqrt(self.head_dim)
+        scores = (q @ k_rep.transpose(0, 1, 3, 2)) * scale  # (B, H, L_q, L_k)
+        
+        if mask is not None:
+            scores = scores + mask
+            
+        scores_max = np.max(scores, axis=-1, keepdims=True)
+        exp_scores = np.exp(scores - scores_max)
+        attn_weights = exp_scores / (np.sum(exp_scores, axis=-1, keepdims=True) + 1e-12)
+        self.attn_weights = attn_weights
+        
+        # 6. Context projection
+        context = attn_weights @ v_rep  # (B, H, L, D_h)
+        self.context = context
+        
+        # Reshape to (B, L, H * D_h)
+        self.context_flat = context.transpose(0, 2, 1, 3).reshape(batch_size, seq_len, self.q_dim)
+        
+        # 7. Output projection
+        out = self.context_flat @ self.W_o
+        return out
+        
+    def backward(self, grad_output: np.ndarray) -> np.ndarray:
+        """
+        Analytical backpropagation through Grouped-Query Attention.
+        """
+        batch_size, seq_len = self.batch_size, self.seq_len
+        
+        # 1. Output projection gradients
+        ctx_2d = self.context_flat.reshape(-1, self.q_dim)
+        grad_out_2d = grad_output.reshape(-1, self.d_model)
+        self.grad_W_o = ctx_2d.T @ grad_out_2d
+        
+        grad_context_flat = grad_output @ self.W_o.T  # (B, L, q_dim)
+        grad_context = grad_context_flat.reshape(batch_size, seq_len, self.num_heads, self.head_dim).transpose(0, 2, 1, 3)
+        
+        # 2. Context = attn_weights @ v_rep
+        grad_v_rep = self.attn_weights.transpose(0, 1, 3, 2) @ grad_context  # (B, H, L, D_h)
+        grad_attn_weights = grad_context @ self.v_rep.transpose(0, 1, 3, 2)  # (B, H, L_q, L_k)
+        
+        # 3. Softmax backward
+        sum_grad_attn = np.sum(grad_attn_weights * self.attn_weights, axis=-1, keepdims=True)
+        grad_scores = self.attn_weights * (grad_attn_weights - sum_grad_attn)
+        
+        # 4. Scores = (q @ k_rep.T) * scale
+        scale = 1.0 / np.sqrt(self.head_dim)
+        grad_q = (grad_scores @ self.k_rep) * scale  # (B, H, L, D_h)
+        grad_k_rep = (grad_scores.transpose(0, 1, 3, 2) @ self.q) * scale  # (B, H, L, D_h)
+        
+        # 5. Reverse RoPE if applied
+        if self.rope_emb is not None:
+            grad_q = self.rope_emb.backward_rope(grad_q, offset=self.rope_offset)
+            grad_k_rep = self.rope_emb.backward_rope(grad_k_rep, offset=self.rope_offset)
+            
+        # 6. Unrepeat KV gradients
+        grad_k = unrepeat_kv_grad(grad_k_rep, self.num_queries_per_kv)  # (B, H_kv, L, D_h)
+        grad_v = unrepeat_kv_grad(grad_v_rep, self.num_queries_per_kv)  # (B, H_kv, L, D_h)
+        
+        # 7. Reshape to linear projection shapes
+        grad_q_proj = grad_q.transpose(0, 2, 1, 3).reshape(batch_size, seq_len, self.q_dim)
+        grad_k_proj = grad_k.transpose(0, 2, 1, 3).reshape(batch_size, seq_len, self.kv_dim)
+        grad_v_proj = grad_v.transpose(0, 2, 1, 3).reshape(batch_size, seq_len, self.kv_dim)
+        
+        x_2d = self.x.reshape(-1, self.d_model)
+        self.grad_W_q = x_2d.T @ grad_q_proj.reshape(-1, self.q_dim)
+        self.grad_W_k = x_2d.T @ grad_k_proj.reshape(-1, self.kv_dim)
+        self.grad_W_v = x_2d.T @ grad_v_proj.reshape(-1, self.kv_dim)
+        
+        # 8. Gradient w.r.t input x
+        grad_x = (
+            (grad_q_proj @ self.W_q.T) +
+            (grad_k_proj @ self.W_k.T) +
+            (grad_v_proj @ self.W_v.T)
+        )
+        return grad_x
+
+
+class ModernTransformerBlock:
+    """
+    Pre-LN Modern Transformer Block combining:
+    - RMSNorm pre-normalization
+    - Grouped-Query Attention (GQA) with RoPE
+    - SwiGLU Feed-Forward Network
+    - Residual skip connections
+    """
+    
+    def __init__(
+        self,
+        d_model: int,
+        num_heads: int,
+        num_kv_heads: Optional[int] = None,
+        ffn_hidden_dim: Optional[int] = None,
+        dropout: float = 0.0
+    ):
+        self.d_model = d_model
+        self.norm1 = RMSNorm(d_model)
+        self.attn = GroupedQueryAttention(d_model, num_heads, num_kv_heads=num_kv_heads, dropout=dropout)
+        self.norm2 = RMSNorm(d_model)
+        self.ffn = SwiGLU(d_model, hidden_dim=ffn_hidden_dim)
+        
+    def forward(
+        self,
+        x: np.ndarray,
+        mask: Optional[np.ndarray] = None,
+        rope_emb: Optional[object] = None,
+        rope_offset: int = 0
+    ) -> np.ndarray:
+        """
+        Pre-LN Forward:
+            h = x + Attn(RMSNorm(x))
+            out = h + SwiGLU(RMSNorm(h))
+        """
+        self.x_input = x
+        norm1_out = self.norm1.forward(x)
+        attn_out = self.attn.forward(norm1_out, mask=mask, rope_emb=rope_emb, rope_offset=rope_offset)
+        self.h = x + attn_out
+        
+        norm2_out = self.norm2.forward(self.h)
+        ffn_out = self.ffn.forward(norm2_out)
+        out = self.h + ffn_out
+        return out
+        
+    def backward(self, grad_output: np.ndarray) -> np.ndarray:
+        """Backward pass through Pre-LN residual block."""
+        # Gradient through FFN branch
+        grad_norm2 = self.ffn.backward(grad_output)
+        grad_h = grad_output + self.norm2.backward(grad_norm2)
+        
+        # Gradient through Attn branch
+        grad_norm1 = self.attn.backward(grad_h)
+        grad_x = grad_h + self.norm1.backward(grad_norm1)
+        return grad_x
+
