@@ -11,7 +11,7 @@ Provides pure NumPy implementations of:
 - Streaming generation generator
 """
 
-from typing import List, Optional, Callable, Union
+from typing import List, Tuple, Optional, Callable, Union
 import numpy as np
 
 
@@ -162,6 +162,198 @@ class GenerationSampler:
         
         # Draw categorical sample
         return int(np.random.choice(len(probs), p=probs))
+
+
+class BeamHypothesis:
+    """
+    Represents a single hypothesis branch during beam search decoding.
+    """
+    def __init__(self, tokens: List[int], log_prob: float = 0.0):
+        self.tokens = list(tokens)
+        self.log_prob = log_prob
+        self.is_done = False
+        
+    @property
+    def length(self) -> int:
+        return len(self.tokens)
+        
+    def compute_score(self, length_penalty: float = 1.0, prompt_len: int = 0) -> float:
+        """
+        Compute length-normalized log-probability score using GNMT length penalty formula:
+            score = log_prob / ((5 + gen_len) / (5 + 1))^length_penalty
+        """
+        gen_len = max(1, len(self.tokens) - prompt_len)
+        if length_penalty == 0.0:
+            return self.log_prob
+        lp = ((5.0 + gen_len) / 6.0) ** length_penalty
+        return self.log_prob / lp
+
+    def __repr__(self) -> str:
+        return f"BeamHypothesis(tokens={self.tokens}, log_prob={self.log_prob:.4f}, done={self.is_done})"
+
+
+class BeamSearchDecoder:
+    """
+    Beam Search Decoder with length normalization, repetition penalties, and n-gram blocking.
+    
+    Maintains the top-B most probable hypothesis paths through the vocabulary space,
+    significantly improving sequence coherence and output quality over greedy decoding.
+    """
+    
+    def __init__(
+        self,
+        beam_width: int = 4,
+        max_new_tokens: int = 50,
+        length_penalty: float = 1.0,
+        no_repeat_ngram_size: int = 0,
+        repetition_penalty: float = 1.0,
+        early_stopping: bool = True,
+    ):
+        """
+        Args:
+            beam_width: Number of active candidate beams tracked per decoding step
+            max_new_tokens: Maximum number of tokens to generate
+            length_penalty: Exponential penalty factor for sequence length (1.0 = standard, >1.0 favors longer)
+            no_repeat_ngram_size: If > 0, forbids generating previously generated n-grams of this length
+            repetition_penalty: Multiplicative repetition penalty applied to logits
+            early_stopping: Whether to terminate when beam_width completed hypotheses are found
+        """
+        self.beam_width = beam_width
+        self.max_new_tokens = max_new_tokens
+        self.length_penalty = length_penalty
+        self.no_repeat_ngram_size = no_repeat_ngram_size
+        self.repetition_penalty = repetition_penalty
+        self.early_stopping = early_stopping
+
+    def _block_ngrams(self, sequence: List[int], logits: np.ndarray) -> np.ndarray:
+        """
+        Set logits of tokens that would complete an already seen n-gram to -inf.
+        """
+        if self.no_repeat_ngram_size <= 0 or len(sequence) < self.no_repeat_ngram_size:
+            return logits
+            
+        n = self.no_repeat_ngram_size
+        prefix = tuple(sequence[-(n - 1):])
+        
+        # Build dictionary of seen n-grams
+        seen_continuations = set()
+        for i in range(len(sequence) - n + 1):
+            if tuple(sequence[i:i + n - 1]) == prefix:
+                seen_continuations.add(sequence[i + n - 1])
+                
+        if seen_continuations:
+            logits = logits.copy()
+            for token_id in seen_continuations:
+                if 0 <= token_id < len(logits):
+                    logits[token_id] = -1e9
+                    
+        return logits
+
+    def _apply_penalties(self, sequence: List[int], logits: np.ndarray) -> np.ndarray:
+        """
+        Apply repetition penalty and n-gram blocking.
+        """
+        logits = logits.copy()
+        if self.repetition_penalty != 1.0 and sequence:
+            for token_id in set(sequence):
+                if 0 <= token_id < len(logits):
+                    if logits[token_id] > 0:
+                        logits[token_id] /= self.repetition_penalty
+                    else:
+                        logits[token_id] *= self.repetition_penalty
+                        
+        return self._block_ngrams(sequence, logits)
+
+    def search(
+        self,
+        model,
+        prompt_ids: List[int],
+        eos_token_id: Optional[int] = None,
+        num_return_sequences: int = 1,
+    ) -> List[Tuple[List[int], float]]:
+        """
+        Execute beam search over the autoregressive model.
+        
+        Args:
+            model: Transformer model exposing .forward(tokens_arr) -> logits
+            prompt_ids: List of integer prompt token IDs
+            eos_token_id: Optional End-of-Sequence token ID
+            num_return_sequences: Number of top scoring sequences to return
+            
+        Returns:
+            List of tuples: (generated_token_ids, normalized_score) sorted descending by score
+        """
+        prompt_len = len(prompt_ids)
+        beams = [BeamHypothesis(tokens=prompt_ids, log_prob=0.0)]
+        completed_hypotheses: List[BeamHypothesis] = []
+        
+        context_len = getattr(model, "seq_length", 128)
+        
+        for step in range(self.max_new_tokens):
+            candidates = []
+            
+            # Step 1: Forward pass for each active beam
+            for beam in beams:
+                if beam.is_done:
+                    candidates.append(beam)
+                    continue
+                    
+                input_tokens = beam.tokens[-context_len:]
+                input_arr = np.array([input_tokens], dtype=np.int32)
+                
+                # Get logits for the next token
+                logits = model.forward(input_arr)[0, -1, :]
+                
+                # Apply penalties
+                logits = self._apply_penalties(beam.tokens, logits)
+                
+                # Compute log softmax: log_softmax(x) = x - max(x) - log(sum(exp(x - max(x))))
+                max_logit = np.max(logits)
+                exp_logits = np.exp(logits - max_logit)
+                log_probs = (logits - max_logit) - np.log(np.sum(exp_logits) + 1e-12)
+                
+                # Extract top 2 * beam_width candidates for this beam
+                top_indices = np.argpartition(log_probs, -min(2 * self.beam_width, len(log_probs)))[-min(2 * self.beam_width, len(log_probs)):]
+                top_indices = top_indices[np.argsort(log_probs[top_indices])[::-1]]
+                
+                for token_id in top_indices:
+                    token_log_prob = log_probs[token_id]
+                    if token_log_prob < -1e8:
+                        continue
+                    new_tokens = beam.tokens + [int(token_id)]
+                    new_hyp = BeamHypothesis(tokens=new_tokens, log_prob=beam.log_prob + float(token_log_prob))
+                    
+                    if eos_token_id is not None and token_id == eos_token_id:
+                        new_hyp.is_done = True
+                        completed_hypotheses.append(new_hyp)
+                    else:
+                        candidates.append(new_hyp)
+                        
+            # Step 2: Prune candidates to top beam_width by current score
+            if not candidates:
+                break
+                
+            candidates.sort(key=lambda h: h.compute_score(self.length_penalty, prompt_len), reverse=True)
+            beams = candidates[:self.beam_width]
+            
+            # Step 3: Check early stopping criteria
+            if self.early_stopping and len(completed_hypotheses) >= self.beam_width:
+                break
+                
+        # Combine remaining active beams with completed hypotheses
+        all_hypotheses = completed_hypotheses + [b for b in beams if not b.is_done]
+        if not all_hypotheses:
+            all_hypotheses = beams
+            
+        # Rank by final length-normalized score
+        all_hypotheses.sort(key=lambda h: h.compute_score(self.length_penalty, prompt_len), reverse=True)
+        
+        results = []
+        for hyp in all_hypotheses[:num_return_sequences]:
+            score = hyp.compute_score(self.length_penalty, prompt_len)
+            results.append((hyp.tokens, float(score)))
+            
+        return results
 
 
 def generate_stream(
