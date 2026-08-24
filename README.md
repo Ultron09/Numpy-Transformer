@@ -137,9 +137,11 @@ Numpy-Transformer/
 ├── gpt_numpy.py              # Core GPT transformer implementation
 ├── tokenizer.py              # CharTokenizer and BPE (Byte-Pair Encoding) subword tokenizer
 ├── sampler.py                # Sampling strategies (Top-K, Top-P, Min-P, Repetition penalty)
-├── kv_cache.py               # KV Cache & vectorized attention engine for fast inference
+├── kv_cache.py               # KV Cache, CachedModernTransformer & fast O(1) step generation
 ├── positional_embeddings.py  # RoPE (Rotary), ALiBi, and Sinusoidal positional embeddings
-├── layers.py                 # Modern architectures: RMSNorm, SiLU, and SwiGLU FFN
+├── layers.py                 # RMSNorm, SwiGLU, and Grouped-Query Attention (GQA/MQA)
+├── attention_mechanisms.py   # Sliding Window Attention (SWA) and Tiled Online Softmax
+├── quantization.py           # INT8 dynamic quantization, QuantizedLinear, and magnitude pruning
 ├── optimizers.py             # AdamW, SGD+Momentum, and Cosine Annealing scheduler
 ├── weights_converter.py      # State dict export, import, and .npz compression
 ├── benchmark.py              # FLOPs profiling, memory analysis & latency breakdown
@@ -147,7 +149,11 @@ Numpy-Transformer/
 ├── example.py                # Quick end-to-end training and generation demo
 ├── train.py                  # Full-scale training pipeline
 ├── tests/
-│   └── test_gradcheck.py     # Finite-difference numerical gradient checking suite
+│   ├── test_gradcheck.py     # Finite-difference numerical gradient checking suite
+│   ├── test_gqa.py           # Grouped-Query Attention & MQA verification
+│   ├── test_kv_cache.py      # KV-cache O(1) inference equivalence tests
+│   ├── test_quantization.py  # INT8 symmetric/asymmetric & pruning tests
+│   └── test_attention_mechanisms.py # Sliding window & online softmax tests
 ├── data/
 │   └── shakespeare.txt       # Sample training corpus
 └── README.md                 # Complete documentation
@@ -170,12 +176,12 @@ Experience real-time streaming autoregressive text generation:
 python cli.py --checkpoint checkpoints/example_model.pkl
 ```
 
-### Run Automated Gradient Checking Tests
+### Run Comprehensive Test Suite
 
-Verify backpropagation mathematical derivations via finite differences:
+Run all finite-difference gradient checks, GQA, KV-cache, and quantization tests:
 
 ```bash
-python tests/test_gradcheck.py
+python -m unittest discover tests
 ```
 
 ### Run Performance & FLOPs Benchmark
