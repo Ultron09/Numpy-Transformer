@@ -26,3 +26,7 @@
 ### Section 7: Mixture of Experts (MoE)
 - **Overview**: Noisy top-k gating routing dynamics and load-balancing auxiliary loss
 - **Verified**: NumPy First-Principles Architecture Module 7
+
+### Section 8: Low-Rank Adaptation (LoRA)
+- **Overview**: Rank-r weight decomposition and zero-overhead inference merging
+- **Verified**: NumPy First-Principles Architecture Module 8
