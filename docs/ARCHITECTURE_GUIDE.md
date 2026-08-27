@@ -34,3 +34,7 @@
 ### Section 9: Weight Quantization (INT8/INT4)
 - **Overview**: Symmetric vs asymmetric dynamic range mapping and error analysis
 - **Verified**: NumPy First-Principles Architecture Module 9
+
+### Section 10: KV Caching Mechanism
+- **Overview**: Autoregressive generation latency speedup via incremental key-value caching
+- **Verified**: NumPy First-Principles Architecture Module 10
