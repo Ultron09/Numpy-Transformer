@@ -106,3 +106,7 @@
 ### Deep Dive 47: Gradient Checkpointing
 - **Concept**: Memory-compute tradeoff recomputing activations during backward pass
 - **Reference Standard**: Module #47
+
+### Deep Dive 48: End-of-Architecture Taxonomy
+- **Concept**: Final consolidated master guide of all 48 transformer advancements
+- **Reference Standard**: Module #48
