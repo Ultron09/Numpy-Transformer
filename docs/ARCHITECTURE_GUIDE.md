@@ -46,3 +46,7 @@
 ### Section 12: Speculative Decoding
 - **Overview**: Rejection sampling verification bounds with draft-target distribution matching
 - **Verified**: NumPy First-Principles Architecture Module 12
+
+### Section 13: Contrastive Decoding
+- **Overview**: Adaptive Plausibility Constraint (APC) truncation and amateur penalty dynamics
+- **Verified**: NumPy First-Principles Architecture Module 13
