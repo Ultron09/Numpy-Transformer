@@ -70,3 +70,7 @@
 ### Deep Dive 38: EAGLE Speculative Engine
 - **Concept**: Feature-level autoregressive drafting and sequence tree verification
 - **Reference Standard**: Module #38
+
+### Deep Dive 39: Lookahead Decoding
+- **Concept**: Parallel Jacobi iteration for exact autoregressive token generation
+- **Reference Standard**: Module #39
