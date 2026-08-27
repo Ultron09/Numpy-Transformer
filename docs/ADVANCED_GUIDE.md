@@ -98,3 +98,7 @@
 ### Deep Dive 45: Perplexity Evaluation Suite
 - **Concept**: Sliding-window cross-entropy loss computation over test corpora
 - **Reference Standard**: Module #45
+
+### Deep Dive 46: Inference Benchmarking Suite
+- **Concept**: Time-to-first-token (TTFT) and inter-token latency (ITL) metrics
+- **Reference Standard**: Module #46
