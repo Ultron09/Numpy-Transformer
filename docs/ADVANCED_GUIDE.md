@@ -82,3 +82,7 @@
 ### Deep Dive 41: Typical Sampling Strategy
 - **Concept**: Information-theoretic entropy truncation for coherent open-ended text
 - **Reference Standard**: Module #41
+
+### Deep Dive 42: Classifier-Free Guidance
+- **Concept**: Conditioning scale interpolation in generative diffusion and LLMs
+- **Reference Standard**: Module #42
