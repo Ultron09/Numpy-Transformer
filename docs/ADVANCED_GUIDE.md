@@ -102,3 +102,7 @@
 ### Deep Dive 46: Inference Benchmarking Suite
 - **Concept**: Time-to-first-token (TTFT) and inter-token latency (ITL) metrics
 - **Reference Standard**: Module #46
+
+### Deep Dive 47: Gradient Checkpointing
+- **Concept**: Memory-compute tradeoff recomputing activations during backward pass
+- **Reference Standard**: Module #47
