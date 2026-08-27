@@ -10,3 +10,7 @@
 ### Deep Dive 18: Multi-Token Prediction
 - **Concept**: Parallel future token heads training objective in modern LLMs
 - **Reference Standard**: Module #18
+
+### Deep Dive 19: Direct Preference Optimization
+- **Concept**: Reference-model policy log-ratio objective formulation
+- **Reference Standard**: Module #19
