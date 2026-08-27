@@ -50,3 +50,7 @@
 ### Deep Dive 32: Ring Attention Architecture
 - **Concept**: Distributed ring-based communication for million-token context windows
 - **Reference Standard**: Module #32
+
+### Deep Dive 33: State Space Models (SSM)
+- **Concept**: Selective state space duality and linear-time sequence modeling
+- **Reference Standard**: Module #33
