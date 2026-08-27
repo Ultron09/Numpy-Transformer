@@ -90,3 +90,7 @@
 ### Deep Dive 43: Grammar-Constrained Decoding
 - **Concept**: Context-free grammar (CFG) regex logit masking during sampling
 - **Reference Standard**: Module #43
+
+### Deep Dive 44: JSON Schema Enforcement
+- **Concept**: Fast Trie-based next-token state machine logit filtering
+- **Reference Standard**: Module #44
