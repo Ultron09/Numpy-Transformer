@@ -14,3 +14,7 @@
 ### Deep Dive 19: Direct Preference Optimization
 - **Concept**: Reference-model policy log-ratio objective formulation
 - **Reference Standard**: Module #19
+
+### Deep Dive 20: KTO Optimization
+- **Concept**: Kahneman-Tversky prospect theory loss on unpaired binary feedback
+- **Reference Standard**: Module #20
