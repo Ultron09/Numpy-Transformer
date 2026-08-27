@@ -50,3 +50,7 @@
 ### Section 13: Contrastive Decoding
 - **Overview**: Adaptive Plausibility Constraint (APC) truncation and amateur penalty dynamics
 - **Verified**: NumPy First-Principles Architecture Module 13
+
+### Section 14: SafeTensors Serializer
+- **Overview**: Zero-copy binary file format layout with header metadata parsing
+- **Verified**: NumPy First-Principles Architecture Module 14
