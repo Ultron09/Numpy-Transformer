@@ -22,3 +22,7 @@
 ### Section 6: Tiled Online Softmax
 - **Overview**: FlashAttention chunked memory optimization without O(N^2) allocations
 - **Verified**: NumPy First-Principles Architecture Module 6
+
+### Section 7: Mixture of Experts (MoE)
+- **Overview**: Noisy top-k gating routing dynamics and load-balancing auxiliary loss
+- **Verified**: NumPy First-Principles Architecture Module 7
