@@ -18,3 +18,7 @@
 ### Deep Dive 20: KTO Optimization
 - **Concept**: Kahneman-Tversky prospect theory loss on unpaired binary feedback
 - **Reference Standard**: Module #20
+
+### Deep Dive 21: Context Caching Protocols
+- **Concept**: Prefix KV state reuse and memory page allocation strategies
+- **Reference Standard**: Module #21
