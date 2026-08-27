@@ -42,3 +42,7 @@
 ### Deep Dive 30: GPTQ Quantization Scheme
 - **Concept**: Optimal Brain Surgeon second-order inverse Hessian quantization
 - **Reference Standard**: Module #30
+
+### Deep Dive 31: Sparse Attention Masks
+- **Concept**: Block-sparse and strided attention patterns for long-sequence scaling
+- **Reference Standard**: Module #31
