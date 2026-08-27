@@ -94,3 +94,7 @@
 ### Deep Dive 44: JSON Schema Enforcement
 - **Concept**: Fast Trie-based next-token state machine logit filtering
 - **Reference Standard**: Module #44
+
+### Deep Dive 45: Perplexity Evaluation Suite
+- **Concept**: Sliding-window cross-entropy loss computation over test corpora
+- **Reference Standard**: Module #45
