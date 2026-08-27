@@ -18,3 +18,7 @@
 ### Section 5: Sliding Window Attention
 - **Overview**: Linear scaling context memory bounds in Mistral-style attention
 - **Verified**: NumPy First-Principles Architecture Module 5
+
+### Section 6: Tiled Online Softmax
+- **Overview**: FlashAttention chunked memory optimization without O(N^2) allocations
+- **Verified**: NumPy First-Principles Architecture Module 6
