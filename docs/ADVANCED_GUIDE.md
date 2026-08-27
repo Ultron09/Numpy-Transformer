@@ -66,3 +66,7 @@
 ### Deep Dive 37: Medusa Multi-Head Decoding
 - **Concept**: Multiple speculative decoding heads tree-verification algorithm
 - **Reference Standard**: Module #37
+
+### Deep Dive 38: EAGLE Speculative Engine
+- **Concept**: Feature-level autoregressive drafting and sequence tree verification
+- **Reference Standard**: Module #38
