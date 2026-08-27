@@ -14,3 +14,7 @@
 ### Section 4: Rotary Position Embeddings (RoPE)
 - **Overview**: Complex plane rotation properties and zero-shot extrapolation
 - **Verified**: NumPy First-Principles Architecture Module 4
+
+### Section 5: Sliding Window Attention
+- **Overview**: Linear scaling context memory bounds in Mistral-style attention
+- **Verified**: NumPy First-Principles Architecture Module 5
