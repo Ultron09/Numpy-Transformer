@@ -74,3 +74,7 @@
 ### Deep Dive 39: Lookahead Decoding
 - **Concept**: Parallel Jacobi iteration for exact autoregressive token generation
 - **Reference Standard**: Module #39
+
+### Deep Dive 40: Min-P Sampling Mechanics
+- **Concept**: Dynamic probability truncation threshold relative to maximum logit
+- **Reference Standard**: Module #40
