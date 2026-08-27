@@ -54,3 +54,7 @@
 ### Deep Dive 33: State Space Models (SSM)
 - **Concept**: Selective state space duality and linear-time sequence modeling
 - **Reference Standard**: Module #33
+
+### Deep Dive 35: Chunked Pre-fill Engine
+- **Concept**: Interleaved prompt prefill and generation batching for uniform latency
+- **Reference Standard**: Module #35
