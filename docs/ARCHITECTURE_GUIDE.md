@@ -30,3 +30,7 @@
 ### Section 8: Low-Rank Adaptation (LoRA)
 - **Overview**: Rank-r weight decomposition and zero-overhead inference merging
 - **Verified**: NumPy First-Principles Architecture Module 8
+
+### Section 9: Weight Quantization (INT8/INT4)
+- **Overview**: Symmetric vs asymmetric dynamic range mapping and error analysis
+- **Verified**: NumPy First-Principles Architecture Module 9
