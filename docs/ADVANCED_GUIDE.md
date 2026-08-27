@@ -30,3 +30,7 @@
 ### Deep Dive 23: PagedAttention Tables
 - **Concept**: Virtual memory block mapping and copy-on-write page management
 - **Reference Standard**: Module #23
+
+### Deep Dive 24: Tensor Parallelism Layout
+- **Concept**: Megatron-LM style row-parallel and column-parallel matrix decomposition
+- **Reference Standard**: Module #24
