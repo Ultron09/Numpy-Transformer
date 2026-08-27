@@ -62,3 +62,7 @@
 ### Deep Dive 36: Continuous Batching
 - **Concept**: Iteration-level scheduling and dynamic slot management
 - **Reference Standard**: Module #36
+
+### Deep Dive 37: Medusa Multi-Head Decoding
+- **Concept**: Multiple speculative decoding heads tree-verification algorithm
+- **Reference Standard**: Module #37
