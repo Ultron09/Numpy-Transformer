@@ -54,3 +54,7 @@
 ### Section 14: SafeTensors Serializer
 - **Overview**: Zero-copy binary file format layout with header metadata parsing
 - **Verified**: NumPy First-Principles Architecture Module 14
+
+### Section 15: Architecture Reference Guide
+- **Overview**: Comprehensive architectural diagram and component taxonomy
+- **Verified**: NumPy First-Principles Architecture Module 15
