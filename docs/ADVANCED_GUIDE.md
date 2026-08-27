@@ -114,3 +114,7 @@
 ### Milestone 49: Speculative Tree Verification
 - **Concept**: Multi-branch token candidate tree verification algorithm
 - **Status**: Verified in NumPy
+
+### Milestone 50: Selective State Space Kernels
+- **Concept**: Hardware-aware SRAM-resident scans for linear recurrent layers
+- **Status**: Verified in NumPy
