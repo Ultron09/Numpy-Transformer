@@ -46,3 +46,7 @@
 ### Deep Dive 31: Sparse Attention Masks
 - **Concept**: Block-sparse and strided attention patterns for long-sequence scaling
 - **Reference Standard**: Module #31
+
+### Deep Dive 32: Ring Attention Architecture
+- **Concept**: Distributed ring-based communication for million-token context windows
+- **Reference Standard**: Module #32
