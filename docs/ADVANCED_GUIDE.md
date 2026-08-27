@@ -38,3 +38,7 @@
 ### Deep Dive 25: Pipeline Parallelism Schedules
 - **Concept**: 1F1B bubble reduction scheduling with activation checkpointing
 - **Reference Standard**: Module #25
+
+### Deep Dive 30: GPTQ Quantization Scheme
+- **Concept**: Optimal Brain Surgeon second-order inverse Hessian quantization
+- **Reference Standard**: Module #30
