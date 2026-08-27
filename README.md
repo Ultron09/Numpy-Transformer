@@ -477,6 +477,7 @@ This repository includes first-principles implementations of modern open-source 
 | **LoRA** | [`lora.py`](file:///lora.py) | Low-Rank Adaptation for parameter-efficient fine-tuning with weight merging | Hu et al. (2021) |
 | **Sparse MoE** | [`moe.py`](file:///moe.py) | Mixture-of-Experts with noisy top-k routing and load-balancing auxiliary loss | Shazeer et al. (2017), Mixtral (2024) |
 | **Speculative Decoding** | [`speculative_decoding.py`](file:///speculative_decoding.py) | Rejection sampling verification engine with draft/target model alignment | Leviathan et al. (2023) |
+| **Contrastive Decoding** | [`contrastive_decoding.py`](file:///contrastive_decoding.py) | Amateur-penalized search with Adaptive Plausibility Constraint (APC) | Li et al. (2023) |
 | **Binary Model Serializer** | [`weights_converter.py`](file:///weights_converter.py) | Zero-copy binary safetensors layout with SHA-256 integrity checks | Safetensors specification |
 
 ### Quick Examples
@@ -495,6 +496,11 @@ moe_ffn = SparseMoEFFN(d_model=768, d_ff=2048, num_experts=8, top_k=2)
 from speculative_decoding import SpeculativeDecoder
 decoder = SpeculativeDecoder(gamma=4, temperature=0.7)
 tokens, stats = decoder.generate(draft_model, target_model, prompt_ids=[101, 205])
+
+# 4. Contrastive Decoding
+from contrastive_decoding import ContrastiveDecoder
+contrastive_dec = ContrastiveDecoder(alpha=0.5, beta=0.1)
+tokens, stats = contrastive_dec.generate(expert_model, amateur_model, prompt_ids=[101, 205])
 ```
 
 ---
