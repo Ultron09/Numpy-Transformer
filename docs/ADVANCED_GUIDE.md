@@ -78,3 +78,7 @@
 ### Deep Dive 40: Min-P Sampling Mechanics
 - **Concept**: Dynamic probability truncation threshold relative to maximum logit
 - **Reference Standard**: Module #40
+
+### Deep Dive 41: Typical Sampling Strategy
+- **Concept**: Information-theoretic entropy truncation for coherent open-ended text
+- **Reference Standard**: Module #41
