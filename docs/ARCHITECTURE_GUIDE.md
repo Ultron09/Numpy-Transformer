@@ -38,3 +38,7 @@
 ### Section 10: KV Caching Mechanism
 - **Overview**: Autoregressive generation latency speedup via incremental key-value caching
 - **Verified**: NumPy First-Principles Architecture Module 10
+
+### Section 11: Beam Search Decoder
+- **Overview**: Length-normalized sequence exploration with n-gram repetition blocking
+- **Verified**: NumPy First-Principles Architecture Module 11
