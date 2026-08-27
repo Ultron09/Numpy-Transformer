@@ -467,6 +467,38 @@ Inspired by:
 
 ---
 
+## 🚀 Advanced LLM Architecture Extensions
+
+This repository includes first-principles implementations of modern open-source LLM breakthroughs:
+
+| Innovation | Implementation Module | Description | Paper Reference |
+| :--- | :--- | :--- | :--- |
+| **Beam Search** | [`sampler.py`](file:///sampler.py) | Length-normalized beam search with n-gram repetition blocking | Wu et al. (2016) |
+| **LoRA** | [`lora.py`](file:///lora.py) | Low-Rank Adaptation for parameter-efficient fine-tuning with weight merging | Hu et al. (2021) |
+| **Sparse MoE** | [`moe.py`](file:///moe.py) | Mixture-of-Experts with noisy top-k routing and load-balancing auxiliary loss | Shazeer et al. (2017), Mixtral (2024) |
+| **Speculative Decoding** | [`speculative_decoding.py`](file:///speculative_decoding.py) | Rejection sampling verification engine with draft/target model alignment | Leviathan et al. (2023) |
+| **Binary Model Serializer** | [`weights_converter.py`](file:///weights_converter.py) | Zero-copy binary safetensors layout with SHA-256 integrity checks | Safetensors specification |
+
+### Quick Examples
+
+```python
+# 1. Parameter-Efficient Fine-Tuning with LoRA
+from lora import LoRALinear
+lora_layer = LoRALinear(in_features=768, out_features=768, r=8, lora_alpha=16)
+lora_layer.merge_weights()  # Zero inference overhead
+
+# 2. Sparse Mixture-of-Experts
+from moe import SparseMoEFFN
+moe_ffn = SparseMoEFFN(d_model=768, d_ff=2048, num_experts=8, top_k=2)
+
+# 3. Speculative Decoding
+from speculative_decoding import SpeculativeDecoder
+decoder = SpeculativeDecoder(gamma=4, temperature=0.7)
+tokens, stats = decoder.generate(draft_model, target_model, prompt_ids=[101, 205])
+```
+
+---
+
 ## 🎯 Next Steps
 
 After mastering this implementation:
