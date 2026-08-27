@@ -22,3 +22,7 @@
 ### Deep Dive 21: Context Caching Protocols
 - **Concept**: Prefix KV state reuse and memory page allocation strategies
 - **Reference Standard**: Module #21
+
+### Deep Dive 22: FlashDecoding Engine
+- **Concept**: Split-KV parallel reduction kernel for autoregressive decoding
+- **Reference Standard**: Module #22
