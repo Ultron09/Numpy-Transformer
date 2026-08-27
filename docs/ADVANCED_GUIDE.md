@@ -26,3 +26,7 @@
 ### Deep Dive 22: FlashDecoding Engine
 - **Concept**: Split-KV parallel reduction kernel for autoregressive decoding
 - **Reference Standard**: Module #22
+
+### Deep Dive 23: PagedAttention Tables
+- **Concept**: Virtual memory block mapping and copy-on-write page management
+- **Reference Standard**: Module #23
