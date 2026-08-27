@@ -86,3 +86,7 @@
 ### Deep Dive 42: Classifier-Free Guidance
 - **Concept**: Conditioning scale interpolation in generative diffusion and LLMs
 - **Reference Standard**: Module #42
+
+### Deep Dive 43: Grammar-Constrained Decoding
+- **Concept**: Context-free grammar (CFG) regex logit masking during sampling
+- **Reference Standard**: Module #43
