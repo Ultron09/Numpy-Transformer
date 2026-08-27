@@ -6,3 +6,7 @@
 ### Deep Dive 17: Logit Soft-Capping
 - **Concept**: Tanh bounding for attention logits and output logits in Gemma-2
 - **Reference Standard**: Module #17
+
+### Deep Dive 18: Multi-Token Prediction
+- **Concept**: Parallel future token heads training objective in modern LLMs
+- **Reference Standard**: Module #18
