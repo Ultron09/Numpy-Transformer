@@ -34,3 +34,7 @@
 ### Deep Dive 24: Tensor Parallelism Layout
 - **Concept**: Megatron-LM style row-parallel and column-parallel matrix decomposition
 - **Reference Standard**: Module #24
+
+### Deep Dive 25: Pipeline Parallelism Schedules
+- **Concept**: 1F1B bubble reduction scheduling with activation checkpointing
+- **Reference Standard**: Module #25
