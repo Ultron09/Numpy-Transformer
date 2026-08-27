@@ -118,3 +118,7 @@
 ### Milestone 50: Selective State Space Kernels
 - **Concept**: Hardware-aware SRAM-resident scans for linear recurrent layers
 - **Status**: Verified in NumPy
+
+### Milestone 51: Quantization Error Minimization
+- **Concept**: Hessian-weighted rounding and second-order error mitigation
+- **Status**: Verified in NumPy
