@@ -42,3 +42,7 @@
 ### Section 11: Beam Search Decoder
 - **Overview**: Length-normalized sequence exploration with n-gram repetition blocking
 - **Verified**: NumPy First-Principles Architecture Module 11
+
+### Section 12: Speculative Decoding
+- **Overview**: Rejection sampling verification bounds with draft-target distribution matching
+- **Verified**: NumPy First-Principles Architecture Module 12
