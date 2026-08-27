@@ -58,3 +58,7 @@
 ### Deep Dive 35: Chunked Pre-fill Engine
 - **Concept**: Interleaved prompt prefill and generation batching for uniform latency
 - **Reference Standard**: Module #35
+
+### Deep Dive 36: Continuous Batching
+- **Concept**: Iteration-level scheduling and dynamic slot management
+- **Reference Standard**: Module #36
